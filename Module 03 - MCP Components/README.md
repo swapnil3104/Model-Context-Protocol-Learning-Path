@@ -51,4 +51,4 @@ Summary
 
 Next Module
 
-Module 04 — Building Your First MCP Server
+Module 04 — Installation
