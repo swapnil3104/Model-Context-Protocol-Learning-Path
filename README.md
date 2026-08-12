@@ -1,4 +1,4 @@
-gi# 🌐 Model Context Protocol (MCP) Learning Path
+# 🌐 Model Context Protocol (MCP) Learning Path
 
 > A comprehensive, hands-on developer guide to mastering the Model Context Protocol (MCP). Learn how to bridge Large Language Models with databases, local file systems, REST APIs, and third-party SaaS services.
 
