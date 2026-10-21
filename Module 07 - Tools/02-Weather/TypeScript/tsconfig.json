@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "lib": ["esnext", "dom"],
+    "moduleResolution": "nodenext",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "strict": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["server.ts"]
+}

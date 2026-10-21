@@ -12,6 +12,19 @@ Since MCP Servers act as gateways to local files, databases, and APIs, protectin
 
 ---
 
+## 💡 Real-World Analogy: The Hotel Safe and Valet Key
+
+> **Analogy:** Think of MCP Authentication as a **hotel guest with a room safe and a valet parking key**:
+> - When you stay at a hotel, you never hand your master house keys and banking passwords to the room service attendant.
+> - The hotel room safe keeps high-value secrets locked away. When you use valet parking, you hand over a restricted *valet key* that can only turn the ignition, not open the glove compartment or trunk.
+> - In MCP, the **AI Host / LLM is the guest**. The **MCP Server is the trusted hotel concierge**. The concierge holds the master API keys and database credentials inside a secure safe (process environment variables `env`).
+> - The LLM never sees or passes API keys in conversation prompts; it simply asks the concierge: *"Please fetch my reservation records."*
+>
+> **Technical Reality:** Credentials in stdio MCP architectures are injected into the server subprocess at launch via environment variables (`env`), completely shielding secrets from LLM prompts and context windows. In HTTP/SSE transports, standard `Authorization: Bearer <token>` HTTP headers authenticate connections at the transport layer.
+
+
+---
+
 # 📚 Learning Objectives
 
 After completing this module, you will be able to:
@@ -65,12 +78,17 @@ After this module, you'll know how to:
 
 ---
 
-# 📂 Suggested Folder Structure
+# 📂 Code & Theory Files
+
+- [📖 MCP Authentication — Comprehensive Theory Guide](./Theory.md)
+- [🐍 Python Authentication Server](./Python/server.py)
+- [📘 TypeScript Authentication Server](./TypeScript/server.ts)
 
 ```text
 Module 10 - Authentication/
 │
 ├── README.md
+├── Theory.md
 ├── Python/
 │   └── server.py
 └── TypeScript/
@@ -85,7 +103,7 @@ Module 10 - Authentication/
 By the end of this module, you'll have:
 
 - ✔ A working Authentication Server in Python and TypeScript
-- ✔ Safe API Key comparisons and configuration reading tools
+- ✔ Safe API Key comparisons with constant-time verification
 - ✔ Deployed OAuth token simulators and JWT validators
 - ✔ Configured client-to-server environment variable boundaries
 
@@ -93,7 +111,15 @@ By the end of this module, you'll have:
 
 # 🚀 What's Next?
 
-In **Module 11**, you'll learn about **Security & Sandboxing**, focusing on folder boundaries, traversal protection, safe execution tools, and human consent.
+In **[Module 11 — Security & Sandboxing](../Module%2011%20-%20Security/README.md)**, you'll learn about **Security & Sandboxing**, focusing on folder boundaries, traversal protection, safe execution tools, and human consent.
+
+---
+
+## 🧭 Navigation
+
+- ⬅️ **Previous Module:** [Module 09 — Prompt Templates](../Module%2009%20-%20Prompt%20Templates/README.md)
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- ➡️ **Next Module:** [Module 11 — Security & Sandboxing](../Module%2011%20-%20Security/README.md)
 
 ---
 

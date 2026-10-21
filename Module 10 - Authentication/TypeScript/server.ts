@@ -8,16 +8,28 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// Setup default environment variables
-process.env.SERVER_API_KEY = process.env.SERVER_API_KEY || "mcp-sec-secret-key-12345";
-process.env.JWT_SIGNING_SECRET = process.env.JWT_SIGNING_SECRET || "super-secret-jwt-signing-key-999";
+// ==============================================================================
+// ARCHITECTURAL NOTE ON MCP AUTHENTICATION:
+// In production Model Context Protocol architectures:
+// 1. Stdio Transport: Authentication is handled by the Host application passing
+//    credentials via process environment variables at launch. Tools should NOT
+//    ask the LLM to pass API keys or secrets in tool arguments, as this leaks
+//    secrets into LLM conversation logs and context windows.
+// 2. SSE / Streamable HTTP Transport: Authentication is handled at the HTTP layer
+//    via standard headers (e.g. `Authorization: Bearer <token>`) during handshake.
+// The tools below are educational simulations demonstrating cryptographic
+// verification concepts (timing-safe compares, JWT validation, OAuth flow).
+// ==============================================================================
 
-// Helper to do timing-safe comparison
+const DEFAULT_SERVER_API_KEY = "mcp-sec-secret-key-12345";
+const DEFAULT_JWT_SIGNING_SECRET = "super-secret-jwt-signing-key-999";
+
+// Timing-safe comparison by hashing both strings first to normalize buffer length
+// This prevents timing leaks on both character contents and string lengths
 function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  const hashA = crypto.createHash("sha256").update(a).digest();
+  const hashB = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
 }
 
 // 1. API Key Authentication Tool
@@ -28,9 +40,10 @@ server.tool(
     client_api_key: z.string().describe("The API Key provided by the client/user"),
   },
   async ({ client_api_key }) => {
-    const serverKey = process.env.SERVER_API_KEY || "";
-    if (!safeCompare(client_api_key, serverKey)) {
+    const serverKey = process.env.SERVER_API_KEY || DEFAULT_SERVER_API_KEY;
+    if (!safeCompare(client_api_key.trim(), serverKey.trim())) {
       return {
+        isError: true,
         content: [{ type: "text", text: "ERROR: Unauthorized. Invalid API Key provided." }],
       };
     }
@@ -52,6 +65,7 @@ server.tool(
   async ({ client_id, client_secret, code }) => {
     if (!client_id || !client_secret || !code) {
       return {
+        isError: true,
         content: [{ type: "text", text: "ERROR: Missing client credentials or authorization code." }],
       };
     }
@@ -65,6 +79,7 @@ server.tool(
       token_type: "Bearer",
       expires_in: expires,
       scope: "read:files write:files",
+      note: "In production, tokens are exchanged by the host client out-of-band, not by the LLM.",
     };
 
     return {
@@ -90,20 +105,22 @@ server.tool(
   },
   async ({ jwt_token }) => {
     try {
-      const parts = jwt_token.split(".");
+      const parts = jwt_token.trim().split(".");
       if (parts.length !== 3) {
         return {
+          isError: true,
           content: [{ type: "text", text: "ERROR: Invalid JWT format. Must contain header, payload, and signature." }],
         };
       }
 
       const [headerB64, payloadB64, signatureB64] = parts;
-      const secret = process.env.JWT_SIGNING_SECRET || "";
+      const secret = process.env.JWT_SIGNING_SECRET || DEFAULT_JWT_SIGNING_SECRET;
       const message = `${headerB64}.${payloadB64}`;
       const expectedSignature = generateHS256Signature(message, secret);
 
       if (!safeCompare(signatureB64, expectedSignature)) {
         return {
+          isError: true,
           content: [{ type: "text", text: "ERROR: JWT Signature verification failed. Token may have been altered." }],
         };
       }
@@ -113,6 +130,7 @@ server.tool(
 
       if (payload.exp && payload.exp < Date.now() / 1000) {
         return {
+          isError: true,
           content: [{ type: "text", text: "ERROR: JWT has expired." }],
         };
       }
@@ -122,6 +140,7 @@ server.tool(
       };
     } catch (e: any) {
       return {
+        isError: true,
         content: [{ type: "text", text: `ERROR: Failed to parse or verify JWT: ${e.message}` }],
       };
     }
@@ -148,7 +167,7 @@ server.tool(
 
     const headerB64 = Buffer.from(JSON.stringify(header)).toString("base64url");
     const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
-    const secret = process.env.JWT_SIGNING_SECRET || "";
+    const secret = process.env.JWT_SIGNING_SECRET || DEFAULT_JWT_SIGNING_SECRET;
     const signature = generateHS256Signature(`${headerB64}.${payloadB64}`, secret);
 
     return {
@@ -177,7 +196,7 @@ server.tool(
         level: logLevel,
         format: "json",
       },
-      note: "API keys and JWT secrets are loaded into the system env but NOT exposed via this configuration read tool.",
+      note: "Secrets and private keys should never be returned by MCP configuration tools.",
     };
 
     return {

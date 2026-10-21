@@ -45,13 +45,11 @@ The Weather MCP server was successfully tested using MCP Inspector.
 
 ### MCP Inspector — Server Connection
 
-![Weather MCP Server Connected](/Module%2007%20-%20Tools/02-Weather/Assect/weather-server-connected.png)
+![Weather MCP Server Connected](./Assect/weather-server-connected.png)
 
 ### MCP Inspector — Tool Execution
 
-![Weather MCP Tool Result](/Module%2007%20-%20Tools/02-Weather/Assect/weather-tool-result.png)
-
-git
+![Weather MCP Tool Result](./Assect/weather-tool-result.png)
 
 The complete flow is:
 

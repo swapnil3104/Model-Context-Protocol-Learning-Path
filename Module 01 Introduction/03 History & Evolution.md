@@ -290,11 +290,16 @@ Imagine there are:
 - 5 AI Applications
 - 20 External Services
 
-Without a standard protocol, developers need:
+Without a standard protocol, the required number of bespoke connectors $C_{\text{custom}}$ scales multiplicatively:
 
-```
-5 × 20 = 100 Integrations
-```
+$$
+C_{\text{custom}} = M \times N = 5 \times 20 = 100 \text{ Integrations}
+$$
+
+where:
+- $M$ is the number of distinct AI host applications ($M = 5$).
+- $N$ is the number of target external services or tools ($N = 20$).
+- $C_{\text{custom}}$ is the total number of custom point-to-point integration bridges required.
 
 As the ecosystem grows, the maintenance burden becomes enormous.
 
@@ -379,17 +384,16 @@ ChatGPT│
 ────────────────────────────
 ```
 
-This reduced integration complexity from:
+This reduced integration complexity from multiplicative to additive:
 
-```
-M × N
-```
+$$
+\mathcal{O}(M \times N) \longrightarrow \mathcal{O}(M + N)
+$$
 
-to
-
-```
-M + N
-```
+where:
+- $M$ is the number of AI applications implementing a standard MCP client.
+- $N$ is the number of external services exposing standard MCP servers.
+- The total integration footprint drops from $M \times N$ point-to-point connectors to $M + N$ universal adapters.
 
 ---
 

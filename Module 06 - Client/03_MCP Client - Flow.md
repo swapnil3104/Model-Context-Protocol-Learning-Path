@@ -155,41 +155,77 @@ After the communication channel is established, the client proceeds with initial
 
 ---
 
-# 5. Step 2 — Initialize
+# 5. Step 2 — Initialize Handshake Flow
 
-After connecting, the client and server initialize the MCP session.
+After establishing the transport connection (stdio pipes or HTTP/SSE), the client initiates session negotiation.
 
-```text
-MCP CLIENT
-     │
-     │ Initialize
-     ▼
-MCP SERVER
-     │
-     │ Initialize Response
-     ▼
-MCP CLIENT
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as 🔌 MCP Client
+    participant Server as 🛠️ MCP Server
+
+    Client->>Server: {"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}
+    Note over Server: Check protocolVersion<br/>Inspect client capabilities
+    Server-->>Client: {"jsonrpc":"2.0","id":1,"result":{protocolVersion, capabilities, serverInfo}}
+    Note over Client: Verify server capabilities
+    Client->>Server: {"jsonrpc":"2.0","method":"notifications/initialized"}
+    Note over Client,Server: ✅ Handshake complete. Session is ready for requests.
 ```
 
-The initialization process establishes the protocol session and exchanges relevant capability information.
+### Handshake JSON-RPC Messages
 
-Conceptually:
-
-```text
-START
-  │
-  ▼
-CONNECT
-  │
-  ▼
-INITIALIZE
-  │
-  ├── Success ──► READY
-  │
-  └── Failure ──► ERROR
+**1. Client sends `initialize` request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "roots": { "listChanged": true },
+      "sampling": {}
+    },
+    "clientInfo": {
+      "name": "enterprise-agent-client",
+      "version": "1.0.0"
+    }
+  }
+}
 ```
 
-The exact initialization details depend on the MCP protocol version and SDK.
+**2. Server responds with matching version and server capabilities:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": { "listChanged": true },
+      "resources": { "subscribe": true, "listChanged": true },
+      "prompts": { "listChanged": true },
+      "logging": {}
+    },
+    "serverInfo": {
+      "name": "production-tools-server",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+**3. Client sends `notifications/initialized` notification:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/initialized"
+}
+```
+
+> [!IMPORTANT]
+> A server must decline or queue any other requests (`tools/list`, `resources/read`, etc.) until `notifications/initialized` is received from the client.
 
 ---
 

@@ -105,6 +105,31 @@ Example:
 
 Once the context window is full, older information may be removed or summarized to make room for new content.
 
+### Mathematical Formulation of Context Window Allocation
+
+In production AI systems using MCP, managing context consumption is modeled as an exact token budget partition. Let $C_{\text{total}}$ represent the maximum context window capacity supported by the target model. The available token headroom $C_{\text{avail}}$ for model output generation is expressed as:
+
+$$
+C_{\text{avail}} = C_{\text{total}} - \left( C_{\text{sys}} + C_{\text{prompt}} + \sum_{i=1}^{k} C_{\text{res},i} + \sum_{j=1}^{m} C_{\text{tool},j} + C_{\text{history}} \right)
+$$
+
+where:
+- $C_{\text{total}}$ is the total context window capacity in tokens.
+- $C_{\text{sys}}$ is the fixed token footprint of host system instructions.
+- $C_{\text{prompt}}$ is the token count consumed by selected MCP prompt templates.
+- $C_{\text{res},i}$ is the token footprint of the $i$-th active MCP resource document ($k$ total resources loaded).
+- $C_{\text{tool},j}$ is the JSON schema token footprint of the $j$-th declared MCP tool ($m$ total tools exposed).
+- $C_{\text{history}}$ is the conversational message history token size.
+- $C_{\text{avail}}$ is the remaining token headroom.
+
+To ensure that the model generates complete, untruncated completions, the host enforces the feasibility constraint:
+
+$$
+C_{\text{avail}} \ge C_{\text{gen,min}}
+$$
+
+where $C_{\text{gen,min}}$ is the minimum required completion budget (typically $4\,096$ tokens).
+
 ---
 
 # Types of Context

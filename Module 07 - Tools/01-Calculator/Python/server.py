@@ -1,7 +1,13 @@
-from mcp.server.fastmcp import FastMCP
+try:
+    # MCP Python SDK >= 2.0 (FastMCP renamed to MCPServer)
+    from mcp.server import MCPServer as FastMCP
+except ImportError:
+    # MCP Python SDK 1.x legacy
+    from mcp.server.fastmcp import FastMCP
 
 # Create MCP server
 mcp = FastMCP("Calculator")
+
 
 
 @mcp.tool()
@@ -23,11 +29,12 @@ def multiply(a: float, b: float) -> float:
 
 
 @mcp.tool()
-def divide(a: float, b: float) -> float:
+def divide(a: float, b: float) -> float | str:
     """Divide a by b."""
     if b == 0:
-        raise ValueError("Cannot divide by zero")
+        return "Error: Cannot divide by zero: denominator 'b' must not be 0"
     return a / b
+
 
 
 if __name__ == "__main__":

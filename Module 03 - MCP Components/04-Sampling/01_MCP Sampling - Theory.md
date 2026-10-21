@@ -1474,6 +1474,34 @@ Example conceptual values:
 
 The supported range and behavior depend on the model/provider.
 
+### Mathematical Formulation of Temperature and Token Probabilities
+
+In language model completion sampling requested through MCP (`sampling/createMessage`), token selection probabilities $P(w_i \mid z)$ across vocabulary $V$ are determined by applying temperature-scaled softmax to the model's raw logits $z \in \mathbb{R}^{|V|}$:
+
+$$
+P(w_i \mid z, T) = \frac{\exp\left(\frac{z_i}{T}\right)}{\sum_{j=1}^{|V|} \exp\left(\frac{z_j}{T}\right)}
+$$
+
+where:
+- $w_i$ is the candidate token in the vocabulary $V$.
+- $z_i$ is the raw unnormalized logit score generated for token $w_i$.
+- $T \in (0, \infty)$ is the sampling temperature parameter supplied in `sampling/createMessage`.
+- $|V|$ is the total vocabulary size.
+
+As $T \to 0$, the probability collapses onto the highest logit token (greedy deterministic decoding):
+
+$$
+\lim_{T \to 0^+} P(w_i \mid z, T) = \mathbb{I}\left(i = \operatorname{argmax}_j z_j\right)
+$$
+
+When nucleus sampling ($p$-sampling) is configured, the sampling candidate set $V^{(p)}$ is truncated to the minimal subset of highest-probability tokens satisfying:
+
+$$
+\sum_{k \in V^{(p)}} P(w_k \mid z, T) \ge p
+$$
+
+where $p \in (0, 1]$ represents the cumulative probability threshold parameter.
+
 ---
 
 # Stop Sequences

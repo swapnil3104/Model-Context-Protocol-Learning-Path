@@ -13,7 +13,7 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// Helper to ensure files exist (similar to Python setup)
+// Helper to ensure files exist once at startup
 async function ensureMockData() {
   await fs.mkdir(DATA_DIR, { recursive: true });
 
@@ -59,7 +59,6 @@ server.resource(
   "markdown",
   "file://docs/markdown",
   async (uri) => {
-    await ensureMockData();
     const mdPath = path.join(DATA_DIR, "example.md");
     const content = await fs.readFile(mdPath, "utf-8");
     return {
@@ -77,7 +76,6 @@ server.resource(
   "json",
   "file://docs/json",
   async (uri) => {
-    await ensureMockData();
     const jsonPath = path.join(DATA_DIR, "example.json");
     const content = await fs.readFile(jsonPath, "utf-8");
     return {
@@ -95,7 +93,6 @@ server.resource(
   "csv",
   "file://docs/csv",
   async (uri) => {
-    await ensureMockData();
     const csvPath = path.join(DATA_DIR, "example.csv");
     const content = await fs.readFile(csvPath, "utf-8");
     return {
@@ -113,14 +110,13 @@ server.resource(
   "pdf",
   "file://docs/pdf",
   async (uri) => {
-    await ensureMockData();
     const pdfPath = path.join(DATA_DIR, "example.pdf");
     const content = await fs.readFile(pdfPath, "utf-8");
     return {
       contents: [{
         uri: uri.href,
         mimeType: "application/pdf",
-        text: content, // Returning text representation of PDF content
+        text: content,
       }],
     };
   }
@@ -131,7 +127,6 @@ server.resource(
   "image",
   "file://images/example-png",
   async (uri) => {
-    await ensureMockData();
     const imgPath = path.join(DATA_DIR, "example.png");
     const buffer = await fs.readFile(imgPath);
     return {
@@ -149,8 +144,6 @@ server.resource(
   "database",
   "db://sqlite/inventory",
   async (uri) => {
-    await ensureMockData();
-    // Simulate reading records from SQLite DB
     const inventory = [
       { id: 1, item: "Server Rack", qty: 5 },
       { id: 2, item: "Switch", qty: 12 },
@@ -169,6 +162,9 @@ server.resource(
     };
   }
 );
+
+// Ensure data exists once before starting server
+await ensureMockData();
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

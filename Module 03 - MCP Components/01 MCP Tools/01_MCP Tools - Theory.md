@@ -341,21 +341,61 @@ Schemas prevent invalid tool calls.
 
 ---
 
-# Tool Output Schema
+# Tool Output Schema & Structured Outputs
 
-Tools return structured data.
+According to the MCP specification, every tool execution result (`tools/call`) returns a **`CallToolResult`** envelope containing an array of `content` objects and an optional `isError` flag.
 
-Example:
+### The `CallToolResult` Envelope
 
 ```json
 {
-  "temperature": 30,
-  "humidity": 78,
-  "condition": "Cloudy"
+  "content": [
+    {
+      "type": "text",
+      "text": "Current weather in Mumbai: 30°C, Humidity: 78%, Condition: Cloudy"
+    }
+  ],
+  "isError": false
 }
 ```
 
-Structured outputs are easier for the AI to understand and combine with other tools.
+### Supported Content Types in Tool Output
+
+| Content Type | Fields | Usage |
+|---|---|---|
+| `text` | `type: "text"`, `text: string` | Plain text, serialized JSON, Markdown, code snippets, or error messages. |
+| `image` | `type: "image"`, `data: string`, `mimeType: string` | Base64-encoded visual data (e.g. charts, diagrams, captured screenshots). |
+| `resource` | `type: "resource"`, `resource: { uri, mimeType, text/blob }` | Embedded client context or file content directly returned inside the tool response. |
+
+### Returning Structured JSON Outputs
+When an AI agent needs to parse machine-readable data, servers return structured JSON stringified within a `text` block:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"city\": \"Mumbai\",\n  \"temperature_c\": 30.5,\n  \"humidity_pct\": 78,\n  \"condition\": \"Cloudy\",\n  \"wind_kph\": 14.2\n}"
+    }
+  ],
+  "isError": false
+}
+```
+
+### Handling Failures (`isError: true`)
+When a tool execution fails (e.g., city not found, database offline), **do not throw a top-level JSON-RPC protocol error**. Instead, return a result with `isError: true` so the LLM can read the failure message and decide how to recover:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Weather API Error: City 'Atlantis' not found. Please verify the city spelling or provide a nearby valid metropolitan region."
+    }
+  ],
+  "isError": true
+}
+```
 
 ---
 

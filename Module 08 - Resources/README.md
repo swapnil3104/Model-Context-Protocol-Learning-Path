@@ -12,6 +12,19 @@ Resources are the primary mechanism for an MCP Server to share read-only data, d
 
 ---
 
+## 💡 Real-World Analogy: Books in a Reference Library
+
+> **Analogy:** If **Tools** are power tools (active verbs that cause changes, like drilling or cutting), **Resources are reference books in a library** (passive nouns that provide knowledge).
+>
+> When an architect or researcher enters the library:
+> - They do not rewrite or alter the encyclopedia shelf; they look up a book by its catalog call number / URI (`file://docs/markdown` or `db://sqlite/inventory`).
+> - They open and read the relevant chapter (`resources/read`), copying key excerpts into their working notes.
+>
+> **Technical Reality:** An MCP Resource exposes application data through standardized URIs. Reading a resource is strictly idempotent and read-only. It supplies context to the LLM without modifying server-side state.
+
+
+---
+
 # 📚 Learning Objectives
 
 After completing this module, you will be able to:
@@ -75,12 +88,17 @@ After this module, you'll know how to:
 
 ---
 
-# 📂 Suggested Folder Structure
+# 📂 Code & Theory Files
+
+- [📖 MCP Resources — Comprehensive Theory Guide](./Theory.md)
+- [🐍 Python Resources Server](./Python/server.py)
+- [📘 TypeScript Resources Server](./TypeScript/server.ts)
 
 ```text
 Module 08 - Resources/
 │
 ├── README.md
+├── Theory.md
 ├── Python/
 │   └── server.py
 └── TypeScript/
@@ -103,7 +121,15 @@ By the end of this module, you'll have:
 
 # 🚀 What's Next?
 
-In **Module 09**, you'll learn about **Prompt Templates**, allowing your servers to declare reusable checklists, review patterns, and instructions that LLMs can load dynamically.
+In **[Module 09 — Prompt Templates](../Module%2009%20-%20Prompt%20Templates/README.md)**, you'll learn about **Prompt Templates**, allowing your servers to declare reusable checklists, review patterns, and instructions that LLMs can load dynamically.
+
+---
+
+## 🧭 Navigation
+
+- ⬅️ **Previous Module:** [Module 07 — MCP Tools](../Module%2007%20-%20Tools/README.md)
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- ➡️ **Next Module:** [Module 09 — Prompt Templates](../Module%2009%20-%20Prompt%20Templates/README.md)
 
 ---
 

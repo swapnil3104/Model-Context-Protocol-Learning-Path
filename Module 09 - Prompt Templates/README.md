@@ -12,6 +12,18 @@ Prompts allow MCP Servers to expose reusable instruction sets, user personas, an
 
 ---
 
+## 💡 Real-World Analogy: Pre-Flight Checklists & Medical Intake Forms
+
+> **Analogy:** Think of an MCP Prompt Template as an airline's **standardized pre-flight checklist** or a hospital's **pre-printed medical intake questionnaire**:
+> - Instead of each individual pilot or doctor making up questions and safety checks from memory, the institution maintains an authoritative, battle-tested form.
+> - The form contains structured slots and blank fields (`{code}`, `{diff}`, or `{transcript}`) that the user fills out.
+> - When submitted, the system produces a comprehensive, consistent evaluation protocol every single time.
+>
+> **Technical Reality:** An MCP Prompt Template is a server-managed message template registered under a unique name with typed arguments. When requested via `prompts/get`, the server compiles dynamic arguments into standardized `user` and `assistant` role messages that the client can prepend or append to the conversation.
+
+
+---
+
 # 📚 Learning Objectives
 
 After completing this module, you will be able to:
@@ -70,12 +82,17 @@ After this module, you'll know how to:
 
 ---
 
-# 📂 Suggested Folder Structure
+# 📂 Code & Theory Files
+
+- [📖 MCP Prompt Templates — Comprehensive Theory Guide](./Theory.md)
+- [🐍 Python Prompt Templates Server](./Python/server.py)
+- [📘 TypeScript Prompt Templates Server](./TypeScript/server.ts)
 
 ```text
 Module 09 - Prompt Templates/
 │
 ├── README.md
+├── Theory.md
 ├── Python/
 │   └── server.py
 └── TypeScript/
@@ -98,7 +115,15 @@ By the end of this module, you'll have:
 
 # 🚀 What's Next?
 
-In **Module 10**, you'll learn about **Authentication**, exploring how to manage secrets, environment variables, API Keys, and OAuth/JWT tokens securely.
+In **[Module 10 — Authentication & Access Control](../Module%2010%20-%20Authentication/README.md)**, you'll learn about **Authentication**, exploring how to manage secrets, environment variables, API Keys, and OAuth/JWT tokens securely.
+
+---
+
+## 🧭 Navigation
+
+- ⬅️ **Previous Module:** [Module 08 — Static & Dynamic Resources](../Module%2008%20-%20Resources/README.md)
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- ➡️ **Next Module:** [Module 10 — Authentication & Access Control](../Module%2010%20-%20Authentication/README.md)
 
 ---
 

@@ -84,19 +84,26 @@ No prior experience with MCP is required.
 
 ## Module Roadmap
 
-```text
-Module 01
-│
-├── Overview
-├── What is MCP?
-├── MCP Architecture
-├── History & Evolution
-├── Why MCP?
-├── AI Tool Calling
-├── AI Agents & MCP
-├── Context in Modern AI Systems
-├── Official Resources
-└── Module Summary
-```
+| Lesson | Title | Focus | Link |
+|---|---|---|---|
+| **00** | **Overview** | Orientation & Learning Objectives | [📖 00 Overview.md](./00%20Overview.md) |
+| **01** | **What is MCP?** | Protocol Definitions & USB-C Analogy | [📖 01 What is MCP.md](./01%20What%20is%20MCP.md) |
+| **02** | **MCP Architecture** | Host-Client-Server Paradigm | [📖 02 MCP Architecture.md](./02%20MCP%20Architecture.md) |
+| **03** | **History & Evolution** | From Ad-Hoc Scripts to Universal Standards | [📖 03 History & Evolution.md](./03%20History%20&%20Evolution.md) |
+| **04** | **Why MCP?** | Enterprise Benefits, ROI, & Security Gains | [📖 04 Why MCP.md](./04%20Why%20MCP.md) |
+| **05** | **AI Tool Calling** | How LLMs Formulate and Execute Tool Requests | [📖 05 AI Tool Calling.md](./05%20AI%20Tool%20Calling.md) |
+| **06** | **AI Agents & MCP** | Autonomous Multi-Step Reasoning & MCP Discovery | [📖 06 AI Agents & MCP.md](./06%20AI%20Agents%20&%20MCP.md) |
+| **07** | **Context in Modern AI** | Token Windows, Budgeting, & State Transfer | [📖 07 Context in Modern AI Systems.md](./07%20Context%20in%20Modern%20AI%20Systems.md) |
+| **08** | **Official Resources** | Official Specs, Repositories, SDKs, & Community | [📖 08 Official Resources.md](./08%20Official%20Resources.md) |
+
+---
+
+## 🧭 Navigation
+
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- ➡️ **Next Lesson:** [01 What is MCP?](./01%20What%20is%20MCP.md)
+- ⏭️ **Next Module:** [Module 02 — MCP Architecture](../Module%2002%20-%20MCP%20Architecture/README.md)
+
+---
 
 By completing this module, you will build a strong conceptual foundation that prepares you for the upcoming modules, where you will learn to build MCP servers, create custom tools, integrate external APIs, and develop real-world AI applications using the Model Context Protocol.

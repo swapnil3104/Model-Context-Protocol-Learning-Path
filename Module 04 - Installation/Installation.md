@@ -611,28 +611,38 @@ Your terminal should then use the virtual environment.
 
 ## 7.4 VS Code MCP Configuration
 
-Recent VS Code releases can support MCP configuration and MCP-aware workflows.
+VS Code integrates with MCP through AI extensions such as **Cline**, **Roo Code**, **GitHub Copilot Agent Mode**, or the MCP extension ecosystem.
 
-A project can contain MCP configuration depending on the VS Code feature/version being used.
+### Configuration Locations
+- **Workspace Configuration:** `.vscode/mcp.json` in your repository root.
+- **Global Extension Settings (e.g., Cline/Roo Code):**
+  - **Windows:** `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json`
+  - **macOS:** `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+  - **Linux:** `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 
-A conceptual configuration looks like:
+### Standard Configuration Structure
 
 ```json
 {
-  "servers": {
-    "my-server": {
+  "mcpServers": {
+    "calculator-python": {
       "command": "python",
-      "args": [
-        "server.py"
-      ]
+      "args": ["${workspaceFolder}/Module 07 - Tools/01-Calculator/Python/server.py"],
+      "env": {
+        "DEBUG": "true"
+      }
+    },
+    "calculator-ts": {
+      "command": "node",
+      "args": ["${workspaceFolder}/Module 07 - Tools/01-Calculator/TypeScript/dist/server.js"]
     }
   }
 }
 ```
 
-The exact configuration location and schema can vary by VS Code version.
-
-Always use the MCP configuration format supported by your installed VS Code release.
+> [!NOTE]
+> **Host Configuration vs. Protocol Requirements:**
+> The `mcpServers` schema (`command`, `args`, `env`) is **host-application configuration**, not an MCP protocol requirement. The MCP protocol only governs what travels across the wire (JSON-RPC 2.0 messages). The host uses this configuration file to know *how to spawn the sub-process* and connect its standard I/O pipes.
 
 ---
 
@@ -682,39 +692,35 @@ MCP Server
 
 ## 8.2 MCP Server Configuration
 
-A typical local MCP server configuration contains:
+Claude Desktop reads MCP server definitions from a JSON file located in your user profile:
+
+### Configuration File Locations
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json` (e.g. `C:\Users\<User>\AppData\Roaming\Claude\claude_desktop_config.json`)
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+### Complete Configuration Example
 
 ```json
 {
   "mcpServers": {
-    "my-server": {
+    "weather-server": {
       "command": "python",
-      "args": [
-        "C:\\path\\to\\server.py"
-      ]
+      "args": ["C:/Model-Context-Protocol-Learning-Path/Module 07 - Tools/02-Weather/Python/server.py"],
+      "env": {
+        "OPENWEATHER_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    },
+    "calculator-server": {
+      "command": "node",
+      "args": ["C:/Model-Context-Protocol-Learning-Path/Module 07 - Tools/01-Calculator/TypeScript/dist/server.js"]
     }
   }
 }
 ```
 
-For a virtual environment, you can point the command to the appropriate Python executable.
-
-Example Windows concept:
-
-```json
-{
-  "mcpServers": {
-    "my-server": {
-      "command": "C:\\path\\to\\project\\.venv\\Scripts\\python.exe",
-      "args": [
-        "C:\\path\\to\\project\\server.py"
-      ]
-    }
-  }
-}
-```
-
-The configuration file location can vary by operating system and current Claude Desktop release.
+> [!TIP]
+> On Windows, always use forward slashes (`/`) or escaped backslashes (`\\\\`) in the `args` file path array to avoid JSON escape sequence errors.
 
 ---
 
@@ -803,24 +809,30 @@ MCP Server
 
 ## 9.2 Configure MCP Server
 
-Cursor supports MCP configuration through its MCP settings/configuration mechanism.
+Cursor supports MCP configuration at either the workspace level or the global level:
 
-A conceptual configuration is:
+### Configuration Locations
+- **Project/Workspace Root:** `.cursor/mcp.json`
+- **Global Settings UI:** Open Cursor Settings ➔ **Features** ➔ **MCP Servers** ➔ Click "Add New MCP Server"
+
+### Configuration Structure (`.cursor/mcp.json`)
 
 ```json
 {
   "mcpServers": {
-    "my-server": {
+    "calculator-server": {
+      "command": "node",
+      "args": ["${workspaceFolder}/Module 07 - Tools/01-Calculator/TypeScript/dist/server.js"]
+    },
+    "python-sqlite": {
       "command": "python",
-      "args": [
-        "/path/to/server.py"
-      ]
+      "args": ["${workspaceFolder}/Module 08 - Resources/Python/server.py"]
     }
   }
 }
 ```
 
-The exact configuration file location and supported options can change between Cursor releases.
+When configured, Cursor AI Composer and Agent mode automatically discover registered tools and resources for coding workflows.
 
 ---
 
@@ -1538,3 +1550,12 @@ VERIFY RESULT
 ```
 
 > **Module 4 Goal:** After completing this module, you should have a working MCP development environment and understand how Python, TypeScript, Docker, VS Code, Claude Desktop, Cursor, and OpenAI-based applications fit into the MCP ecosystem.
+
+---
+
+## 🧭 Navigation
+
+- ⬅️ **Previous Module:** [Module 03 — MCP Components](../Module%2003%20-%20MCP%20Components/README.md)
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- ➡️ **Next Module:** [Module 05 — Setting Up Your First MCP Server](../Module%2005%20-%20Setting%20Up%20Your%20First%20MCP%20Server/README.md)
+

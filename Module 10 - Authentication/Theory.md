@@ -246,6 +246,54 @@ MCP Server
 
 API keys should never be committed to Git repositories.
 
+### Timing Attacks & Constant-Time Verification
+
+When validating an API key or shared secret, using conventional string equality (`key == expected_key`) creates a **timing side-channel vulnerability**. Standard equality operators terminate early on the first mismatched byte, allowing an attacker to deduce secret characters one by one by measuring microsecond differences in server response latency.
+
+#### Mathematical Formulation of Constant-Time Comparison
+
+To prevent timing leaks, the comparison must inspect every byte regardless of whether earlier bytes mismatched. Let $A$ and $B$ be byte arrays of equal length $L$:
+
+$$
+D(A, B) = \bigvee_{i=0}^{L-1} \left( A[i] \oplus B[i] \right)
+$$
+
+where:
+- $A[i]$ and $B[i]$ denote the $i$-th byte of the provided and reference keys.
+- $\oplus$ represents the bitwise XOR operation ($A[i] \oplus B[i] = 0$ if and only if $A[i] = B[i]$).
+- $\bigvee$ is the cumulative bitwise OR accumulator across all $L$ byte positions.
+- $D(A, B) = 0$ if and only if string $A$ is identical to string $B$.
+
+The execution time is guaranteed to be strictly invariant:
+
+$$
+T_{\text{compare}}(L) = c \cdot L
+$$
+
+where $c$ is a hardware-dependent constant, completely independent of the index of mismatch.
+
+#### Implementation in MCP Servers
+
+**Python:**
+```python
+import hmac
+
+def verify_api_key(provided_key: str, expected_key: str) -> bool:
+    return hmac.compare_digest(provided_key, expected_key)
+```
+
+**TypeScript (Node.js):**
+```typescript
+import crypto from "crypto";
+
+export function verifyApiKey(provided: string, expected: string): boolean {
+  const bufA = Buffer.from(provided);
+  const bufB = Buffer.from(expected);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+```
+
 ---
 
 ## 7. Bearer Token Authentication

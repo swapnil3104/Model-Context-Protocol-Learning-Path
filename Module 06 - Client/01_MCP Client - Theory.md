@@ -273,27 +273,91 @@ After successful initialization, the client can communicate with the server.
 
 ---
 
-# 8. Client Initialization
+# 8. Client Initialization & Capability Negotiation
 
-Before normal operations begin, the client and server establish the MCP session.
+Before normal operations begin, the client and server establish an MCP session using a strict 3-step initialization handshake defined by the MCP specification.
 
-Conceptually:
-
-```text
-Client
-  │
-  │ Initialize
-  ▼
-Server
-  │
-  │ Initialize Response
-  ▼
-Client
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as 🔌 MCP Client
+    participant S as 🛠️ MCP Server
+    
+    C->>S: 1. initialize (protocolVersion, capabilities, clientInfo)
+    Note over S: Verify version & capabilities
+    S-->>C: 2. result (protocolVersion, capabilities, serverInfo)
+    C->>S: 3. notifications/initialized
+    Note over C,S: Session established. Ready for tools/list, resources/list, etc.
 ```
 
-Initialization allows the two sides to establish the protocol session and exchange relevant information about their capabilities.
+### Step 1: `initialize` Request
+The client starts by declaring the protocol version it wants to speak and what client-side capabilities it supports (such as `roots` or `sampling`):
 
-The exact initialization details depend on the MCP protocol version and SDK implementation.
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "roots": {
+        "listChanged": true
+      },
+      "sampling": {}
+    },
+    "clientInfo": {
+      "name": "my-mcp-client",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+### Step 2: `initialize` Response
+The server responds with its negotiated protocol version, supported server capabilities (such as `tools`, `resources`, `prompts`, and `logging`), and server metadata:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {
+        "listChanged": true
+      },
+      "resources": {
+        "subscribe": true,
+        "listChanged": true
+      },
+      "prompts": {
+        "listChanged": true
+      },
+      "logging": {}
+    },
+    "serverInfo": {
+      "name": "enterprise-data-server",
+      "version": "1.2.0"
+    }
+  }
+}
+```
+
+### Step 3: `notifications/initialized`
+The client sends a final confirmation notification. **The server MUST NOT process any other requests before this notification is received:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/initialized"
+}
+```
+
+### Version Negotiation Rules
+- The client provides its supported `protocolVersion` (e.g., `"2024-11-05"`).
+- The server responds with the version it will use. If the versions match, initialization succeeds.
+- If the server does not support the requested version, it may offer the closest compatible version or return a protocol error.
 
 ---
 
@@ -891,6 +955,48 @@ MCP Host
 ```
 
 A robust client should handle errors instead of assuming every request succeeds.
+
+### Protocol Error Codes vs. Tool Errors
+
+In the Model Context Protocol, errors fall into two distinct categories:
+
+1. **JSON-RPC Protocol Errors**: Sent in the top-level `error` object when protocol negotiation, parsing, or transport fails.
+   - `-32700`: Parse error (invalid JSON received by the server).
+   - `-32600`: Invalid Request (payload does not conform to JSON-RPC 2.0).
+   - `-32601`: Method not found (e.g., calling an unrecognized method).
+   - `-32602`: Invalid params (tool arguments do not match JSON Schema).
+   - `-32603`: Internal error (server crashed during message processing).
+
+2. **Application Tool Errors**: The JSON-RPC call itself succeeds (`result` object returned), but `isError: true` is set inside the content block, allowing the LLM to inspect the failure message and self-correct:
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+       "isError": true,
+       "content": [
+         {
+           "type": "text",
+           "text": "Error: File '/etc/hosts' not found or access denied."
+         }
+       ]
+     }
+   }
+   ```
+
+### Mathematical Formulation of Exponential Backoff with Full Jitter
+
+When an MCP client experiences transport disconnects or transient server timeouts, reconnection attempts must implement randomized exponential backoff. The backoff delay $t_{\text{wait}}(i)$ for attempt $i$ is calculated as:
+
+$$
+t_{\text{wait}}(i) = \min\left(t_{\text{max}}, t_{\text{base}} \cdot 2^i\right) \cdot \xi
+$$
+
+where:
+- $i \in \{0, 1, 2, \dots\}$ represents the retry attempt index.
+- $t_{\text{base}}$ is the base backoff interval (e.g., $200\text{ ms}$).
+- $t_{\text{max}}$ is the maximum backoff ceiling (e.g., $30\text{ s}$).
+- $\xi \sim \mathcal{U}(0, 1)$ is a uniform random real number providing full jitter to prevent thundering herd contention across distributed hosts.
 
 ---
 

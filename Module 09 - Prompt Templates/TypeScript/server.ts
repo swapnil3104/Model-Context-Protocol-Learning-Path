@@ -88,11 +88,11 @@ server.prompt(
     length: z.enum(["short", "medium", "long"]).optional().default("medium").describe("Desired summary length"),
   },
   async ({ text, length }) => {
-    const lengthInstruction = {
+    const lengthInstruction = ({
       short: "Summarize in 1-2 sentences maximum.",
       medium: "Provide a brief paragraph summary followed by 3-5 bulleted highlights.",
       long: "Provide a detailed summary mapping out main arguments, supporting points, and key takeaways."
-    }[length];
+    } as Record<string, string>)[length] ?? "Provide a balanced summary.";
 
     return {
       messages: [

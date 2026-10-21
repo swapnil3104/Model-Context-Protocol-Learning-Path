@@ -308,6 +308,27 @@ MCP can be integrated with many different systems, including:
 
 ---
 
+# Limitations of MCP
+
+While MCP provides tremendous advantages, architects and developers should be aware of its technical constraints and current design trade-offs:
+
+1. **Context Window Token Consumption:**
+   When an MCP server exposes dozens of tools or extensive schemas, all tool definitions must be injected into the LLM's context window. This consumes input tokens on every turn and can degrade model reasoning if too many irrelevant tools are loaded simultaneously.
+
+2. **Session Statefulness & Connection Persistence:**
+   MCP connections (both stdio and Streamable HTTP/SSE) are stateful sessions initiated via a formal handshake. Network interruptions or crashed server sub-processes require client-side reconnection logic and state recovery.
+
+3. **Transport Overhead & Latency:**
+   Every tool execution involves JSON-RPC serialization, IPC (stdio pipes) or network transmission (HTTP/SSE), input validation, execution, and deserialization. For latency-critical high-frequency applications, this IPC overhead is higher than in-process direct function calls.
+
+4. **Security Responsibility on Server Implementation:**
+   MCP isolates credentials from the AI model, but the security of the underlying system still rests entirely on the server developer. A server with improper input sanitization remains vulnerable to path traversal, SQL injection, and command execution.
+
+5. **Lack of Native Binary Streaming (in current specification):**
+   While MCP supports text, base64 images, and embedded resource blobs, the protocol does not currently provide native real-time chunked binary audio/video streams over tool invocation envelopes.
+
+---
+
 # Key Takeaways
 
 - **Model Context Protocol (MCP)** is an open standard for connecting AI applications with external systems.

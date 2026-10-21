@@ -27,7 +27,7 @@ This creates:
 ```
 package.json
 ```
-![Screenshot](./images/image.png)
+![Screenshot](./Images/image.png)
 
 ---
 

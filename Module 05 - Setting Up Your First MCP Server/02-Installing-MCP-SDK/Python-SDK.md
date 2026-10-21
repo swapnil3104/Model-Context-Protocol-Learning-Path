@@ -31,7 +31,7 @@ python -m venv .venv
 ```bash
 .venv\Scripts\activate
 ```
-![Screenshot](./Images/Screenshot%202026-08-01%20151521.png )
+![Screenshot](./Images/Screenshot%202026-08-01%20151521.png)
 
 ### Linux / macOS
 

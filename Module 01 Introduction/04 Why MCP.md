@@ -48,39 +48,37 @@ As the number of AI applications and external services grows, the number of inte
 
 ---
 
-# The M × N Integration Problem
+# The $M \times N$ Integration Problem
 
 Suppose there are:
 
-- **M AI Applications**
-- **N External Services**
+- $M$ AI Applications
+- $N$ External Services
 
-Without MCP, developers must build:
+Without MCP, developers must build bespoke connectors for every combination, resulting in multiplicative growth:
 
-```text
-M × N Integrations
-```
+$$
+I_{\text{traditional}} = M \times N
+$$
 
-For example:
+where:
+- $M$ is the number of AI applications or agent clients.
+- $N$ is the number of external services, tools, or data stores.
+- $I_{\text{traditional}}$ is the total number of point-to-point integrations required.
 
-- 5 AI Applications
-- 10 Services
+For example, with $M = 5$ applications and $N = 10$ services:
 
-Required Integrations:
+$$
+I_{\text{traditional}} = 5 \times 10 = 50 \text{ Integrations}
+$$
 
-```text
-5 × 10 = 50 Integrations
-```
+If another AI application is added ($M = 6$):
 
-If another AI application is added:
+$$
+I_{\text{traditional}} = 6 \times 10 = 60 \text{ Integrations}
+$$
 
-```text
-6 × 10 = 60 Integrations
-```
-
-Every new platform increases development effort.
-
-This approach becomes difficult to maintain and scale.
+Every new platform increases development effort multiplicatively, quickly becoming unsustainable to build, test, and maintain.
 
 ---
 
@@ -116,27 +114,27 @@ Instead of creating integrations for every combination, MCP introduces a standar
 
 Now developers only need:
 
-- One MCP Client for each AI application
-- One MCP Server for each external service
+- One MCP Client for each AI application ($M$ total clients)
+- One MCP Server for each external service ($N$ total servers)
 
-The total integrations become:
+The total integration effort becomes additive rather than multiplicative:
 
-```text
-M + N
-```
+$$
+I_{\text{mcp}} = M + N
+$$
 
-Example:
+where:
+- $M$ is the number of MCP client implementations.
+- $N$ is the number of MCP server implementations.
+- $I_{\text{mcp}}$ is the total number of standard components needed.
 
-```text
-5 AI Applications
-10 Services
+Example: For $M = 5$ AI applications and $N = 10$ services:
 
-Total Integrations
+$$
+I_{\text{mcp}} = 5 + 10 = 15 \text{ Integrations}
+$$
 
-5 + 10 = 15
-```
-
-Instead of 50 integrations, only 15 are needed.
+Instead of $50$ custom integrations, only $15$ standardized components are needed—a **$70\%$ reduction** in integration surface area.
 
 ---
 
@@ -511,6 +509,20 @@ MCP is useful in many scenarios:
 - Local-First
 - Easy Integration
 - Better AI Agent Support
+
+---
+
+# Limitations and Technical Trade-offs
+
+Understanding when *not* to use MCP or how to mitigate its trade-offs is crucial for architecture decisions:
+
+| Trade-off / Limitation | Impact | Mitigation Strategy |
+|---|---|---|
+| **Token Budget Pressure** | Registering many tools with extensive schemas inflates prompt context. | Use selective tool loading, domain-specific servers, or prompt routing. |
+| **Serialization Overhead** | JSON-RPC stringification over stdio/HTTP adds microsecond/millisecond latency. | Prefer stdio for local IPC; batch operations where possible. |
+| **Session Lifecycle Dependency** | Sudden server process exit aborts in-flight tool calls. | Implement robust client retry logic with exponential backoff and jitter. |
+| **Trust Boundary Enforcement** | Server code remains liable for command injection and path traversal risks. | Sandbox servers in Docker/containers and strictly validate input schemas. |
+| **No Native Audio/Video Streaming** | Large media streams cannot be chunked directly over tool envelopes. | Pass URLs or file descriptors rather than raw streaming payloads. |
 
 ---
 

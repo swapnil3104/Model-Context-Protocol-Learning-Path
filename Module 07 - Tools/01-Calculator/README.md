@@ -95,11 +95,16 @@ add
 30
 ```
 
-### Formula
+### Mathematical Formula
 
-```text
-a + b
-```
+$$
+y = a + b
+$$
+
+where:
+- $a$ is the first operand (augend).
+- $b$ is the second operand (addend).
+- $y$ is the computed sum.
 
 ---
 
@@ -128,11 +133,16 @@ subtract
 10
 ```
 
-### Formula
+### Mathematical Formula
 
-```text
-a - b
-```
+$$
+y = a - b
+$$
+
+where:
+- $a$ is the minuend.
+- $b$ is the subtrahend.
+- $y$ is the computed difference.
 
 ---
 
@@ -161,11 +171,16 @@ multiply
 50
 ```
 
-### Formula
+### Mathematical Formula
 
-```text
-a × b
-```
+$$
+y = a \times b
+$$
+
+where:
+- $a$ is the multiplicand.
+- $b$ is the multiplier.
+- $y$ is the computed product.
 
 ---
 
@@ -194,11 +209,16 @@ divide
 4
 ```
 
-### Formula
+### Mathematical Formula
 
-```text
-a / b
-```
+$$
+y = \frac{a}{b}, \quad \text{for } b \neq 0
+$$
+
+where:
+- $a$ is the dividend.
+- $b$ is the divisor ($b \neq 0$).
+- $y$ is the computed quotient.
 
 The server also handles division by zero.
 
@@ -693,7 +713,7 @@ The Calculator module therefore serves as the **first practical MCP Tool impleme
 
 The Calculator MCP Server is successfully connected to MCP Inspector using STDIO.
 
-![Calculator MCP Server Connected](/Module%2007%20-%20Tools/01-Calculator/Assect/Screenshot%202026-08-11%20122654.png)
+![Calculator MCP Server Connected](./Assect/Screenshot%202026-08-11%20122654.png)
 
 ---
 
@@ -706,4 +726,4 @@ MCP Inspector successfully discovered the Calculator tools:
 - `multiply`
 - `divide`
 
-![Calculator MCP Tools](/Module%2007%20-%20Tools/01-Calculator/Assect/Screenshot%202026-08-11%20122724.png)
+![Calculator MCP Tools](./Assect/Screenshot%202026-08-11%20122724.png)

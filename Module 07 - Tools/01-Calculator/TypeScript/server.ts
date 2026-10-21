@@ -7,19 +7,14 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-type CalculatorArgs = {
-  a: number;
-  b: number;
-};
-
 server.tool(
   "add",
   "Add two numbers",
   {
-    a: z.number(),
-    b: z.number(),
+    a: z.number().describe("First number"),
+    b: z.number().describe("Second number"),
   },
-  async ({ a, b }: CalculatorArgs) => ({
+  async ({ a, b }) => ({
     content: [
       {
         type: "text",
@@ -33,10 +28,10 @@ server.tool(
   "subtract",
   "Subtract b from a",
   {
-    a: z.number(),
-    b: z.number(),
+    a: z.number().describe("First number"),
+    b: z.number().describe("Second number to subtract"),
   },
-  async ({ a, b }: CalculatorArgs) => ({
+  async ({ a, b }) => ({
     content: [
       {
         type: "text",
@@ -50,10 +45,10 @@ server.tool(
   "multiply",
   "Multiply two numbers",
   {
-    a: z.number(),
-    b: z.number(),
+    a: z.number().describe("First number"),
+    b: z.number().describe("Second number"),
   },
-  async ({ a, b }: CalculatorArgs) => ({
+  async ({ a, b }) => ({
     content: [
       {
         type: "text",
@@ -67,12 +62,21 @@ server.tool(
   "divide",
   "Divide a by b",
   {
-    a: z.number(),
-    b: z.number(),
+    a: z.number().describe("Numerator"),
+    b: z.number().describe("Denominator (must not be zero)"),
   },
-  async ({ a, b }: CalculatorArgs) => {
+  async ({ a, b }) => {
     if (b === 0) {
-      throw new Error("Cannot divide by zero");
+      // In MCP, return isError: true so the LLM receives the error text and can adjust
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "Error: Cannot divide by zero.",
+          },
+        ],
+      };
     }
 
     return {
@@ -87,5 +91,4 @@ server.tool(
 );
 
 const transport = new StdioServerTransport();
-
 await server.connect(transport);

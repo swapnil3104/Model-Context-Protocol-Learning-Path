@@ -2,7 +2,13 @@ import os
 import json
 import sqlite3
 import base64
-from mcp.server.fastmcp import FastMCP
+try:
+    # MCP Python SDK >= 2.0 (FastMCP renamed to MCPServer)
+    from mcp.server import MCPServer as FastMCP
+except ImportError:
+    # MCP Python SDK 1.x legacy
+    from mcp.server.fastmcp import FastMCP
+
 
 mcp = FastMCP("Resources Demo Server")
 
@@ -41,75 +47,71 @@ def setup_mock_data():
     # 5. Create a mock Database file (SQLite)
     db_path = os.path.join(DATA_DIR, "sqlite.db")
     if not os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS inventory (id INTEGER PRIMARY KEY, item TEXT, qty INTEGER)")
-        cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (1, 'Server Rack', 5)")
-        cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (2, 'Switch', 12)")
-        cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (3, 'Ethernet Cable', 150)")
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS inventory (id INTEGER PRIMARY KEY, item TEXT, qty INTEGER)")
+            cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (1, 'Server Rack', 5)")
+            cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (2, 'Switch', 12)")
+            cursor.execute("INSERT OR IGNORE INTO inventory (id, item, qty) VALUES (3, 'Ethernet Cable', 150)")
+            conn.commit()
 
     # 6. Create a mock Image (small 1x1 transparent PNG)
     img_path = os.path.join(DATA_DIR, "example.png")
     if not os.path.exists(img_path):
-        # 1x1 transparent PNG in base64
         png_data = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
         with open(img_path, "wb") as f:
             f.write(png_data)
 
-# Call setup helper
+# Call setup helper once during initialization
 setup_mock_data()
 
 
 # --- RESOURCES ---
 
-@mcp.resource("file://docs/markdown")
+@mcp.resource("file://docs/markdown", mime_type="text/markdown")
 def get_markdown_resource() -> str:
     """Read and expose a Markdown file resource."""
     md_path = os.path.join(DATA_DIR, "example.md")
     with open(md_path, "r", encoding="utf-8") as f:
         return f.read()
 
-@mcp.resource("file://docs/json")
+@mcp.resource("file://docs/json", mime_type="application/json")
 def get_json_resource() -> str:
     """Read and expose a JSON configuration resource."""
     json_path = os.path.join(DATA_DIR, "example.json")
     with open(json_path, "r", encoding="utf-8") as f:
         return f.read()
 
-@mcp.resource("file://docs/csv")
+@mcp.resource("file://docs/csv", mime_type="text/csv")
 def get_csv_resource() -> str:
     """Read and expose a CSV report resource."""
     csv_path = os.path.join(DATA_DIR, "example.csv")
     with open(csv_path, "r", encoding="utf-8") as f:
         return f.read()
 
-@mcp.resource("file://docs/pdf")
+@mcp.resource("file://docs/pdf", mime_type="application/pdf")
 def get_pdf_resource() -> str:
     """Read and expose raw text extracted from a PDF document."""
     pdf_path = os.path.join(DATA_DIR, "example.pdf")
-    # For demonstration without external heavy libraries, we read the text representation
     with open(pdf_path, "r", encoding="utf-8", errors="ignore") as f:
         return f.read()
 
-@mcp.resource("file://images/example-png")
+@mcp.resource("file://images/example-png", mime_type="image/png")
 def get_image_resource() -> bytes:
     """Read and expose a PNG image resource."""
     img_path = os.path.join(DATA_DIR, "example.png")
     with open(img_path, "rb") as f:
         return f.read()
 
-@mcp.resource("db://sqlite/inventory")
+@mcp.resource("db://sqlite/inventory", mime_type="text/markdown")
 def get_database_resource() -> str:
     """Fetch current inventory records from the SQLite database resource."""
     db_path = os.path.join(DATA_DIR, "sqlite.db")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM inventory")
-    rows = cursor.fetchall()
-    conn.close()
-    
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, item, qty FROM inventory")
+        rows = cursor.fetchall()
+
     # Format rows as markdown table
     result = "| ID | Item | Quantity |\n|---|---|---|\n"
     for r in rows:

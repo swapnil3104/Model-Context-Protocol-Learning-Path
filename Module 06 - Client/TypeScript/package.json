@@ -1,0 +1,17 @@
+{
+  "name": "mcp-client-sample",
+  "version": "1.0.0",
+  "description": "Minimal runnable Model Context Protocol client in TypeScript",
+  "type": "module",
+  "scripts": {
+    "start": "tsx client.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.0"
+  }
+}

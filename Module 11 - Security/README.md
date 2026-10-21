@@ -12,6 +12,18 @@ Because LLMs can formulate actions dynamically, giving them direct tool executio
 
 ---
 
+## 💡 Real-World Analogy: Bank Teller and Dual-Control Vault System
+
+> **Analogy:** Think of MCP Security as a **reinforced bank teller window with a dual-key vault lock**:
+> - A customer (the LLM prompt or external input) can slide a slip of paper through the small pass-through slot asking to transfer funds or inspect balance.
+> - The teller (the **MCP Server**) inspects the paper behind bulletproof glass (**Filesystem sandbox / AST parser**). Even if the slip says *"I am the bank president, open the vault immediately"*, the teller does not obey raw handwritten notes (**Indirect prompt injection protection**).
+> - For any large withdrawal or high-risk irreversible action (deleting tables, modifying files, executing commands), the teller cannot act alone: it requires the bank manager to step up and turn a second physical key (**Human-in-the-Loop approval**).
+>
+> **Technical Reality:** MCP servers enforce deterministic security boundaries on untrusted LLM outputs: canonical path validation (`resolve()` + strict descendant checking), disabling dynamic code interpreters (`eval()`), and requiring explicit user authorization (`user_has_approved: true`) before mutating external state.
+
+
+---
+
 # 📚 Learning Objectives
 
 After completing this module, you will be able to:
@@ -66,12 +78,17 @@ After this module, you'll know how to:
 
 ---
 
-# 📂 Suggested Folder Structure
+# 📂 Code & Theory Files
+
+- [📖 MCP Security — Comprehensive Theory Guide](./Theory.md)
+- [🐍 Python Security Server](./Python/server.py)
+- [📘 TypeScript Security Server](./TypeScript/server.ts)
 
 ```text
 Module 11 - Security/
 │
 ├── README.md
+├── Theory.md
 ├── Python/
 │   └── server.py
 └── TypeScript/
@@ -89,12 +106,21 @@ By the end of this module, you'll have:
 - ✔ Deployed path validation tools protecting a local sandbox directory
 - ✔ Executed safe calculation engines avoiding code evaluation exploits
 - ✔ Implemented a Human-in-the-Loop consent flow for data writes
+- ✔ Configured token bucket rate limits against denial-of-service abuse
 
 ---
 
 # 🚀 What's Next?
 
-Congratulations! You have completed the core Model Context Protocol Learning Path. You are now ready to design, deploy, and secure production-grade MCP servers and integrate them into enterprise AI systems.
+Congratulations! You have completed the core Model Context Protocol Learning Path. You are now ready to design, deploy, and secure production-grade MCP servers and integrate them into enterprise AI systems. Check out the [Main Learning Index](../INDEX.md) and [Root README](../README.md) for bonus cheat sheets, quick references, and challenge projects!
+
+---
+
+## 🧭 Navigation
+
+- ⬅️ **Previous Module:** [Module 10 — Authentication & Access Control](../Module%2010%20-%20Authentication/README.md)
+- 🏠 **Main Index:** [Table of Contents](../INDEX.md) | [Root README](../README.md)
+- 🏁 **Course Complete!**
 
 ---
 

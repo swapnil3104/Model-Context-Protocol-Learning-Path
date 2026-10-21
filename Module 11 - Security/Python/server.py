@@ -1,17 +1,27 @@
 import os
-import re
-from mcp.server.fastmcp import FastMCP
+import ast
+import operator
+import pathlib
+try:
+    # MCP Python SDK >= 2.0 (FastMCP renamed to MCPServer)
+    from mcp.server import MCPServer as FastMCP
+except ImportError:
+    # MCP Python SDK 1.x legacy
+    from mcp.server.fastmcp import FastMCP
+
 
 mcp = FastMCP("Security Demo Server")
 
 # --- CONTEXT SETUP ---
 # Defining an allowed sandbox directory for safe tool filesystem access
-ALLOWED_SANDBOX_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sandbox"))
-os.makedirs(ALLOWED_SANDBOX_DIR, exist_ok=True)
+ALLOWED_SANDBOX_DIR = pathlib.Path(__file__).resolve().parent.parent / "sandbox"
+ALLOWED_SANDBOX_DIR.mkdir(parents=True, exist_ok=True)
 
 # Create a sample file inside sandbox
-with open(os.path.join(ALLOWED_SANDBOX_DIR, "allowed.txt"), "w", encoding="utf-8") as f:
-    f.write("This is a safe file inside the sandbox directory.")
+sample_file = ALLOWED_SANDBOX_DIR / "allowed.txt"
+if not sample_file.exists():
+    with open(sample_file, "w", encoding="utf-8") as f:
+        f.write("This is a safe file inside the sandbox directory.")
 
 # --- SECURITY DEMO TOOLS ---
 
@@ -22,66 +32,104 @@ def read_sandbox_file(relative_path: str) -> str:
     Args:
         relative_path: Path relative to the allowed sandbox directory (e.g. 'allowed.txt').
     """
-    # 1. Resolve absolute path
-    target_path = os.path.abspath(os.path.join(ALLOWED_SANDBOX_DIR, relative_path))
-    
-    # 2. Check if target_path is within ALLOWED_SANDBOX_DIR (directory traversal check)
-    if not target_path.startswith(ALLOWED_SANDBOX_DIR):
-        return f"SECURITY ERROR: Access Denied. Path '{relative_path}' is outside the allowed sandbox directory: {ALLOWED_SANDBOX_DIR}"
+    try:
+        # 1. Resolve target path completely
+        target_path = (ALLOWED_SANDBOX_DIR / relative_path).resolve()
         
-    if not os.path.exists(target_path):
+        # 2. Robust Directory Traversal Check:
+        # Using relative_to ensures target_path is strictly a descendant of ALLOWED_SANDBOX_DIR,
+        # preventing classic startsWith() sibling prefix bypasses (e.g., ../sandbox_secret).
+        target_path.relative_to(ALLOWED_SANDBOX_DIR.resolve())
+    except (ValueError, RuntimeError):
+        return f"SECURITY ERROR: Access Denied. Path '{relative_path}' resolves outside sandbox."
+
+    if not target_path.exists():
         return f"ERROR: File '{relative_path}' not found inside sandbox."
         
-    if not os.path.isfile(target_path):
-        return f"ERROR: '{relative_path}' is not a file."
+    if not target_path.is_file():
+        return f"ERROR: '{relative_path}' is not a regular file."
         
     with open(target_path, "r", encoding="utf-8") as f:
         return f.read()
 
+
+# Safe math AST evaluator (Replaces dangerous eval)
+ALLOWED_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.USub: operator.neg,
+    ast.UAdd: operator.pos,
+}
+
+def _eval_ast_node(node):
+    if isinstance(node, ast.Expression):
+        return _eval_ast_node(node.body)
+    elif isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node.value
+    elif isinstance(node, ast.BinOp):
+        op_type = type(node.op)
+        if op_type not in ALLOWED_OPERATORS:
+            raise ValueError(f"Operator {op_type.__name__} is not allowed.")
+        left = _eval_ast_node(node.left)
+        right = _eval_ast_node(node.right)
+        if op_type is ast.Div and right == 0:
+            raise ZeroDivisionError("Division by zero.")
+        return ALLOWED_OPERATORS[op_type](left, right)
+    elif isinstance(node, ast.UnaryOp):
+        op_type = type(node.op)
+        if op_type not in ALLOWED_OPERATORS:
+            raise ValueError(f"Operator {op_type.__name__} is not allowed.")
+        operand = _eval_ast_node(node.operand)
+        return ALLOWED_OPERATORS[op_type](operand)
+    else:
+        raise ValueError(f"Unsupported AST node type: {type(node).__name__}")
+
+
 @mcp.tool()
 def execute_safe_math(expression: str) -> str:
-    """Evaluate a mathematical expression safely without using python's eval().
+    """Evaluate a mathematical expression safely via an AST visitor without using eval().
     
-    Demonstrates safe tool execution by sanitizing inputs and parsing tokens.
+    Demonstrates safe tool execution by rejecting exponentiation (**), function calls,
+    built-ins, and arbitrary code execution entirely.
     
     Args:
         expression: Simple mathematical expression (e.g. '2 + 5 * 10').
     """
-    # 1. Input Validation: Check that expression only contains digits, whitespace, and basic operators
-    if not re.match(r"^[0-9\s\+\-\*\/\(\)\.]+$", expression):
-        return "SECURITY ERROR: Invalid characters in expression. Only numbers and mathematical operators (+, -, *, /, Parentheses) are allowed."
-        
+    if len(expression) > 100:
+        return "SECURITY ERROR: Expression exceeds maximum allowed length (100 characters)."
+
     try:
-        # 2. Safe execution: using python's built-in compile with limited globals/locals to prevent execution of builtins
-        # Note: In production, a dedicated AST parsing evaluator is even safer than restricted compile.
-        allowed_globals = {"__builtins__": None}
-        code = compile(expression, "<string>", "eval")
-        result = eval(code, allowed_globals, {})
+        # Parse expression into an AST without executing it
+        parsed_ast = ast.parse(expression, mode='eval')
+        result = _eval_ast_node(parsed_ast)
         return f"Expression: {expression}\nResult: {result}"
-    except Exception as e:
+    except (ValueError, SyntaxError, ZeroDivisionError) as e:
         return f"ERROR: Failed to safely evaluate expression: {str(e)}"
+    except Exception as e:
+        return f"SECURITY ERROR: Invalid expression format: {str(e)}"
+
 
 @mcp.tool()
-def mock_write_action_with_consent(item_id: int, new_quantity: int, user_has_approved: bool = False) -> str:
-    """Demonstrate Human-in-the-Loop consent validation for data writes.
+def mock_write_action_with_consent(item_id: int, new_quantity: int) -> str:
+    """Demonstrate a state-changing write operation.
+    
+    SECURITY PRINCIPLE:
+    In the Model Context Protocol, Human-in-the-Loop (HITL) authorization MUST
+    be enforced by the MCP Host Client (e.g., Claude Desktop, IDE UI prompt)
+    BEFORE the tool execution request is sent to the server.
+    
+    Tools should not rely on autonomous LLM self-certification parameters
+    (such as user_has_approved=True), because an LLM can bypass them automatically.
     
     Args:
         item_id: The ID of the item to update.
         new_quantity: The target quantity.
-        user_has_approved: Flag representing user consent from the client side.
     """
-    # 1. Schema / Input Validation
     if item_id <= 0 or new_quantity < 0:
         return "VALIDATION ERROR: Item ID must be greater than 0, and Quantity must be non-negative."
         
-    # 2. Permissions & Consent Check
-    if not user_has_approved:
-        return (
-            f"PERMISSION REQUIRED: Updating item {item_id} to quantity {new_quantity} is a write operation. "
-            "Please call this tool again and set user_has_approved=True to confirm this change."
-        )
-        
-    # 3. Simulate Write Action
     return f"SUCCESS: Database updated. Item {item_id} quantity set to {new_quantity}."
 
 
